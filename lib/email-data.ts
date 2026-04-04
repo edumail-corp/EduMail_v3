@@ -1,5 +1,6 @@
 export type EmailCategory = "Admissions" | "Finance" | "Registrar" | "Academic";
 export type EmailStatus = "Draft" | "Auto-sent" | "Escalated";
+export type EmailFilter = "All" | EmailStatus;
 
 export type StaffEmail = {
   id: string;
@@ -14,7 +15,12 @@ export type StaffEmail = {
   receivedAt: string;
 };
 
-export const mockEmails: StaffEmail[] = [
+export type StaffEmailUpdateInput = {
+  status?: EmailStatus;
+  aiDraft?: string;
+};
+
+const seedEmails: StaffEmail[] = [
   {
     id: "EM-1001",
     sender: "Maya Thompson <maya.thompson@student.edu>",
@@ -80,3 +86,31 @@ export const mockEmails: StaffEmail[] = [
     receivedAt: "2026-03-29T08:05:00.000Z",
   },
 ];
+
+export function getInitialStaffEmails() {
+  return seedEmails.map((email) => ({ ...email }));
+}
+
+export function isEmailStatus(value: string): value is EmailStatus {
+  return value === "Draft" || value === "Auto-sent" || value === "Escalated";
+}
+
+export function isEmailFilter(value: string): value is EmailFilter {
+  return value === "All" || isEmailStatus(value);
+}
+
+export function filterEmails(emails: StaffEmail[], filter: EmailFilter) {
+  if (filter === "All") {
+    return emails;
+  }
+
+  return emails.filter((email) => email.status === filter);
+}
+
+export function getInitialSelectedEmailId(emails: StaffEmail[]) {
+  return emails[0]?.id ?? "";
+}
+
+export function getSelectedEmail(emails: StaffEmail[], selectedId: string) {
+  return emails.find((email) => email.id === selectedId) ?? emails[0];
+}

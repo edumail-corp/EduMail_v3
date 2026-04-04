@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## EduMailAI
 
-## Getting Started
+EduMailAI is a Next.js prototype for a university staff workflow tool. The app helps operations teams triage inbound emails, review AI-generated draft responses, and manage the policy documents that support those replies.
 
-First, run the development server:
+## What’s in the prototype
+
+- Staff dashboard shell with shared navigation and layout
+- Inbox, Draft Queue, and Escalations review flows
+- AI draft detail view with confidence indicators
+- Knowledge Base document library with local client-side file staging for PDF and DOCX uploads
+
+## App Routes
+
+- `/` - product landing page
+- `/dashboard/inbox` - full message queue
+- `/dashboard/drafts` - draft-review queue
+- `/dashboard/escalations` - escalation queue
+- `/dashboard/knowledge-base` - knowledge document management
+
+## Local Development
+
+From the project directory, install dependencies and start the dev server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000` with your browser to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Verification
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Use these commands to verify the project locally:
 
-## Learn More
+```bash
+npm run lint
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+Note: the production build uses `next/font` with Geist, so it may need network access the first time the build fetches the font files.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS 4
 
-## Deploy on Vercel
+## Current Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The message and document data are still in a shared local prototype data layer.
+- The Knowledge Base upload flow is intentionally local and in-memory, so uploads do not persist across page reloads.
+- The next logical step is wiring the shared data layer to real backend storage or APIs.

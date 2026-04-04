@@ -1,0 +1,62 @@
+[
+  {
+    "id": "EM-1001",
+    "sender": "Maya Thompson <maya.thompson@student.edu>",
+    "subject": "Questions about international admission requirements",
+    "body": "Hello Admissions Team, I am applying as an international student for Fall 2027 and wanted to confirm if IELTS scores are mandatory when I already have SAT verbal scores. Could you also share the deadline for scholarship consideration?",
+    "category": "Admissions",
+    "confidence": 93,
+    "status": "Draft",
+    "aiDraft": "Hello Maya,\n\nThank you for your interest in EduMail University. For international applicants, IELTS or TOEFL is generally required unless your prior education was completed in English. SAT verbal scores are helpful but do not replace the English proficiency requirement in most cases.\n\nFor scholarship consideration, please submit your full application by December 15.\n\nBest regards,\nAdmissions Office",
+    "source": "Admissions-International-Policy-2026.pdf",
+    "receivedAt": "2026-03-27T09:12:00.000Z"
+  },
+  {
+    "id": "EM-1002",
+    "sender": "Liam Patel <liam.patel@student.edu>",
+    "subject": "Installment plan for spring tuition payment",
+    "body": "Hi Finance Office, I cannot pay the full spring tuition this month. Is there a monthly installment option and what are the late fee rules if one payment is delayed?",
+    "category": "Finance",
+    "confidence": 89,
+    "status": "Auto-sent",
+    "aiDraft": "Hello Liam,\n\nYes, we offer a monthly installment plan for spring tuition. You can enroll through the student billing portal under Payment Plans. Please note that each missed installment may incur a late fee based on our tuition policy.\n\nIf needed, we can also connect you with Financial Aid to discuss additional support options.\n\nRegards,\nStudent Finance Team",
+    "source": "Student-Billing-Handbook-2026.docx",
+    "receivedAt": "2026-03-27T11:46:00.000Z"
+  },
+  {
+    "id": "EM-1003",
+    "sender": "Registrar Queue <noreply@registrar.edu>",
+    "subject": "Name mismatch on transcript request",
+    "body": "A transcript request from student ID 224198 was flagged due to a legal name mismatch between SIS and the transcript form. Please review and advise next steps.",
+    "category": "Registrar",
+    "confidence": 74,
+    "status": "Escalated",
+    "aiDraft": null,
+    "source": "Transcript-Request-Workflow-v4.pdf",
+    "receivedAt": "2026-03-28T07:30:00.000Z"
+  },
+  {
+    "id": "EM-1004",
+    "sender": "Prof. Elena Cruz <ecruz@faculty.edu>",
+    "subject": "Grade change approval process for capstone course",
+    "body": "Good afternoon, I need to submit a grade correction for two capstone students due to an LMS export issue. Can you confirm the approval chain and expected processing timeline?",
+    "category": "Academic",
+    "confidence": 91,
+    "status": "Draft",
+    "aiDraft": "Dear Professor Cruz,\n\nThank you for reaching out. Grade correction requests for capstone courses should be submitted via the Academic Records portal. After submission, requests route to your department chair for approval and then to the Registrar for final posting.\n\nTypical processing time is 3-5 business days.\n\nBest,\nAcademic Operations",
+    "source": "Academic-Records-SOP-2026.pdf",
+    "receivedAt": "2026-03-28T14:22:00.000Z"
+  },
+  {
+    "id": "EM-1005",
+    "sender": "Noah Kim <noah.kim@student.edu>",
+    "subject": "Deadline to drop elective without W grade",
+    "body": "Hi, could you tell me the last date to drop an elective this semester without receiving a W on my transcript? I am considering a schedule adjustment.",
+    "category": "Registrar",
+    "confidence": 96,
+    "status": "Auto-sent",
+    "aiDraft": "Hello Noah,\n\nThe last date to drop an elective course without receiving a W grade this semester is April 4. You can process the change through the registration portal before 11:59 PM local time.\n\nIf you want help evaluating schedule impacts, we recommend speaking with your academic advisor.\n\nRegards,\nRegistrar Office",
+    "source": "Academic-Calendar-2026.pdf",
+    "receivedAt": "2026-03-29T08:05:00.000Z"
+  }
+]
