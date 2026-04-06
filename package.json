@@ -2,11 +2,18 @@
   "name": "edumailai",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "WATCHPACK_POLLING=true next dev --webpack --hostname 127.0.0.1",
+    "dev:webpack": "WATCHPACK_POLLING=true next dev --webpack --hostname 127.0.0.1",
+    "build": "next build --webpack",
+    "start": "next start --hostname 127.0.0.1",
+    "lint": "node scripts/basic-lint.mjs",
+    "lint:eslint": "eslint app components lib eslint.config.mjs next.config.ts postcss.config.mjs",
+    "typecheck": "tsc -p tsconfig.typecheck.json --noEmit",
+    "verify": "npm run lint && npm run build"
   },
   "dependencies": {
     "next": "16.2.1",

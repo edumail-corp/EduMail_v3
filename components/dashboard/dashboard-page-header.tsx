@@ -14,25 +14,25 @@ export function DashboardPageHeader({
   actions?: ReactNode;
 }>) {
   return (
-    <header className="mb-6 flex flex-col gap-4 rounded-[28px] border border-white/70 bg-white/80 px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur md:flex-row md:items-end md:justify-between md:px-6">
+    <header className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
       <div>
         {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#2E5FA3]">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
             {eyebrow}
           </p>
         ) : null}
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">
+        <h2 className="mt-3 text-4xl font-semibold tracking-tight text-[#1E2340] md:text-[3.2rem]">
           {title}
         </h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 md:text-[15px]">
+        <p className="mt-3 max-w-3xl text-base leading-8 text-slate-500">
           {description}
         </p>
       </div>
 
       {meta || actions ? (
-        <div className="flex flex-col items-start gap-3 md:items-end">
+        <div className="flex flex-wrap items-center gap-3 md:justify-end">
           {meta ? (
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+            <span className="rounded-full border border-white/80 bg-white/82 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 shadow-[0_14px_36px_rgba(140,153,179,0.16)]">
               {meta}
             </span>
           ) : null}

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Suspense,
   useDeferredValue,
   useEffect,
   useRef,
@@ -9,13 +10,22 @@ import {
   type DragEvent,
 } from "react";
 import { useSearchParams } from "next/navigation";
+import {
+  DashboardIcon,
+  dashboardGhostButtonClassName,
+  dashboardPanelClassName,
+  dashboardPrimaryButtonClassName,
+  dashboardSecondaryButtonClassName,
+} from "@/components/dashboard/dashboard-chrome";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
+import { DashboardTopBar } from "@/components/dashboard/dashboard-top-bar";
 import {
   acceptedKnowledgeFileExtensions,
   createKnowledgeDocumentDraft,
   defaultKnowledgeCategorySelection,
   filterKnowledgeDocuments,
   formatKnowledgeFileSize,
+  getKnowledgeDocumentOriginLabel,
   isAcceptedKnowledgeFile,
   isKnowledgeCategorySelection,
   knowledgeBaseCategoryClasses,
@@ -71,7 +81,7 @@ function matchesKnowledgeDocumentSearch(
   return searchableText.includes(query);
 }
 
-export default function KnowledgeBasePage() {
+function KnowledgeBasePageContent() {
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -102,6 +112,23 @@ export default function KnowledgeBasePage() {
   const storedDocumentCount = documents.filter(
     (document) => typeof document.downloadUrl === "string"
   ).length;
+  const referencedDocumentCount = documents.filter(
+    (document) => document.referenceCount > 0
+  ).length;
+  const metadataOnlyCount = documents.length - storedDocumentCount;
+  const totalStoredBytes = documents.reduce(
+    (total, document) => total + (document.sizeInBytes ?? 0),
+    0
+  );
+  const demoStorageCapacity = 5 * 1024 * 1024 * 1024;
+  const storageUsagePercent =
+    demoStorageCapacity === 0
+      ? 0
+      : Math.min(100, Math.round((totalStoredBytes / demoStorageCapacity) * 100));
+  const libraryReadiness =
+    documents.length === 0
+      ? 0
+      : Math.round((referencedDocumentCount / documents.length) * 100);
 
   const canUpload =
     draftFile !== null &&
@@ -300,6 +327,12 @@ export default function KnowledgeBasePage() {
 
   return (
     <>
+      <DashboardTopBar
+        searchValue={documentQuery}
+        onSearchChange={setDocumentQuery}
+        searchPlaceholder="Search documents, categories, file types, or dates..."
+      />
+
       <DashboardPageHeader
         eyebrow="Reference Library"
         title="Knowledge Base"
@@ -307,21 +340,26 @@ export default function KnowledgeBasePage() {
         meta={
           isLoadingDocuments
             ? "Loading library..."
-            : `${storedDocumentCount} stored files • ${documents.length} total entries`
+            : `${storedDocumentCount} stored files • ${referencedDocumentCount} linked refs • ${documents.length} total entries`
         }
       />
 
       <section className="space-y-4">
-        <article className="rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur md:p-6">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <article className={`${dashboardPanelClassName} p-5 md:p-6`}>
+          <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Document Intake</h3>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Stage a PDF or DOCX file, assign it to the right policy domain, and store the source document inside the local library.
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                Upload Document
+              </p>
+              <h3 className="mt-3 text-3xl font-semibold tracking-tight text-[#1E2340]">
+                Upload Document
+              </h3>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+                Drag and drop a PDF or DOCX file into the intake area, then assign it to the right knowledge domain so drafts can cite it later.
               </p>
             </div>
-            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              Stored Files
+            <span className="rounded-full border border-white/80 bg-white/82 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#5C61FF] shadow-[0_14px_36px_rgba(141,153,179,0.14)]">
+              {storedDocumentCount} stored files
             </span>
           </div>
 
@@ -330,21 +368,24 @@ export default function KnowledgeBasePage() {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`flex cursor-pointer flex-col items-center justify-center rounded-[24px] border-2 border-dashed px-6 py-12 text-center transition ${
+            className={`flex cursor-pointer flex-col items-center justify-center rounded-[34px] border-2 border-dashed px-6 py-16 text-center transition ${
               isDragging
-                ? "border-[#2E5FA3] bg-blue-50"
-                : "border-slate-300 bg-slate-50/80"
+                ? "border-[#5C61FF] bg-[#F5F6FF]"
+                : "border-white/80 bg-white/54"
             }`}
           >
-            <span className="mb-2 text-4xl" role="img" aria-label="Upload cloud">
-              ☁️
+            <span className="grid h-20 w-20 place-items-center rounded-[28px] bg-white/82 text-[#5C61FF] shadow-[0_18px_44px_rgba(141,153,179,0.18)]">
+              <DashboardIcon name="upload" className="h-9 w-9" />
             </span>
-            <p className="text-base font-medium text-slate-700">
-              Drop files here or click to stage a document
+            <p className="mt-7 text-3xl font-semibold tracking-tight text-[#1E2340]">
+              Upload Document
             </p>
-            <p className="mt-1 text-sm text-slate-500">
-              Supported formats: PDF, DOCX
+            <p className="mt-3 max-w-lg text-sm leading-7 text-slate-500">
+              Drag and drop PDF or DOCX files to sync with the local knowledge library.
             </p>
+            <span className={`${dashboardSecondaryButtonClassName} mt-6`}>
+              Select Files
+            </span>
           </label>
           <input
             id="kb-upload-input"
@@ -356,14 +397,16 @@ export default function KnowledgeBasePage() {
           />
 
           {draftFile ? (
-            <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="mt-5 rounded-[28px] border border-[#DCE1FF] bg-[#F6F7FF] p-5 shadow-[0_16px_36px_rgba(141,153,179,0.14)]">
+              <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                     Staged Document
                   </p>
-                  <p className="mt-1 text-sm text-slate-700">{draftFile.name}</p>
-                  <p className="mt-2 text-xs font-medium text-slate-500">
+                  <p className="mt-2 text-lg font-semibold text-[#1E2340]">
+                    {draftFile.name}
+                  </p>
+                  <p className="mt-2 text-sm text-slate-500">
                     {draftFile.mimeTypeLabel} • {draftFile.sizeLabel} • Approx.{" "}
                     {draftFile.estimatedPages} pages
                   </p>
@@ -372,110 +415,119 @@ export default function KnowledgeBasePage() {
                 <button
                   type="button"
                   onClick={handleClearDraft}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
+                  className={dashboardGhostButtonClassName}
                 >
                   Remove
                 </button>
               </div>
+
+              <div className="mt-5 flex flex-wrap items-end gap-3">
+                <div>
+                  <label
+                    htmlFor="kb-category"
+                    className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
+                  >
+                    Category
+                  </label>
+                  <select
+                    id="kb-category"
+                    value={selectedCategory}
+                    onChange={(event) =>
+                      setSelectedCategory(
+                        event.target.value as KnowledgeCategorySelectValue
+                      )
+                    }
+                    className="rounded-full border border-white/80 bg-white/86 px-4 py-3 text-sm text-slate-700 shadow-[0_12px_30px_rgba(141,153,179,0.12)] outline-none transition focus:border-[#6A6CFF]/35 focus:bg-white"
+                  >
+                    <option>{defaultKnowledgeCategorySelection}</option>
+                    {knowledgeBaseCategoryOptions.map((category) => (
+                      <option key={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleUpload}
+                  disabled={!canUpload}
+                  className={
+                    canUpload
+                      ? dashboardPrimaryButtonClassName
+                      : "inline-flex items-center justify-center rounded-full bg-slate-200 px-5 py-3 text-sm font-semibold text-slate-500"
+                  }
+                >
+                  {isSavingDocument ? "Saving..." : "Add to Library"}
+                </button>
+              </div>
             </div>
           ) : (
-            <p className="mt-4 text-sm text-slate-500">
+            <div className="mt-5 rounded-[24px] border border-white/75 bg-white/54 px-4 py-4 text-sm text-slate-500">
               No file staged yet. Choose a file or drop one into the intake area.
-            </p>
+            </div>
           )}
 
-          <div className="mt-5 flex flex-wrap items-end gap-3">
-            <div>
-              <label
-                htmlFor="kb-category"
-                className="mb-1 block text-sm font-medium text-slate-700"
-              >
-                Category
-              </label>
-              <select
-                id="kb-category"
-                value={selectedCategory}
-                onChange={(event) =>
-                  setSelectedCategory(
-                    event.target.value as KnowledgeCategorySelectValue
-                  )
-                }
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 focus:border-[#2E5FA3] focus:outline-none"
-              >
-                <option>{defaultKnowledgeCategorySelection}</option>
-                {knowledgeBaseCategoryOptions.map((category) => (
-                  <option key={category}>{category}</option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleUpload}
-              disabled={!canUpload}
-              className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition ${
-                canUpload
-                  ? "bg-[#1F3864] hover:bg-[#172b4e]"
-                  : "cursor-not-allowed bg-slate-300"
-              }`}
-            >
-              {isSavingDocument ? "Saving..." : "Add to Library"}
-            </button>
-          </div>
-
           {uploadError ? (
-            <p className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            <p className="mt-4 rounded-[24px] border border-[#FFD2DA] bg-[#FFF1F4] px-4 py-3 text-sm text-[#B4375C]">
               {uploadError}
             </p>
           ) : null}
 
           {uploadMessage ? (
-            <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <p className="mt-4 rounded-[24px] border border-[#C7F0D6] bg-[#F0FBF4] px-4 py-3 text-sm text-[#19754C]">
               {uploadMessage}
             </p>
           ) : null}
         </article>
 
-        <article className="rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur md:p-6">
+        <article className={`${dashboardPanelClassName} p-5 md:p-6`}>
           <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Document Library</h3>
-              <p className="mt-2 text-sm text-slate-600">
-                Filter the current source set by policy domain, download saved files, and manage the stored knowledge documents.
+              <h3 className="text-3xl font-semibold tracking-tight text-[#1E2340]">
+                Document Library
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-slate-500">
+                Browse stored source documents, review metadata-only seed entries, and jump into the policy files supporting current drafts.
               </p>
             </div>
-          </div>
-
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="w-full sm:max-w-lg">
-              <label
-                htmlFor="kb-document-search"
-                className="mb-1 block text-sm font-medium text-slate-700"
-              >
-                Search documents
-              </label>
-              <input
-                id="kb-document-search"
-                type="search"
-                value={documentQuery}
-                onChange={(event) => setDocumentQuery(event.target.value)}
-                placeholder="Search by name, category, date, or file type"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 focus:border-[#2E5FA3] focus:outline-none"
-              />
-            </div>
-
             <button
               type="button"
               onClick={() => setDocumentQuery("")}
               disabled={documentQuery.length === 0}
-              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+              className={
                 documentQuery.length > 0
-                  ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  : "cursor-not-allowed bg-slate-100 text-slate-400"
-              }`}
+                  ? dashboardGhostButtonClassName
+                  : "inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400"
+              }
             >
               Clear Search
             </button>
+          </div>
+
+          <div className="mb-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[24px] border border-white/75 bg-white/62 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                Stored Files
+              </p>
+              <p className="mt-3 text-3xl font-semibold tracking-tight text-[#1E2340]">
+                {storedDocumentCount}
+              </p>
+            </div>
+            <div className="rounded-[24px] border border-white/75 bg-white/62 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                Metadata Only
+              </p>
+              <p className="mt-3 text-3xl font-semibold tracking-tight text-[#1E2340]">
+                {metadataOnlyCount}
+              </p>
+            </div>
+            <div className="rounded-[24px] border border-white/75 bg-white/62 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                Referenced in Mailbox
+              </p>
+              <p className="mt-3 text-3xl font-semibold tracking-tight text-[#1E2340]">
+                {referencedDocumentCount}
+              </p>
+            </div>
           </div>
 
           <div className="mb-5 flex flex-wrap gap-2">
@@ -484,10 +536,10 @@ export default function KnowledgeBasePage() {
                 key={filter}
                 type="button"
                 onClick={() => setActiveFilter(filter)}
-                className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                className={`rounded-full px-4 py-2.5 text-sm font-semibold transition ${
                   activeFilter === filter
-                    ? "bg-[#2E5FA3] text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-[#5C61FF] text-white shadow-[0_16px_34px_rgba(92,97,255,0.24)]"
+                    : "border border-white/80 bg-white/70 text-slate-500 hover:bg-white hover:text-[#4F57E8]"
                 }`}
               >
                 {filter}
@@ -502,122 +554,229 @@ export default function KnowledgeBasePage() {
           </p>
 
           {normalizedRequestedDocumentQuery.length > 0 ? (
-            <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+            <div className="mb-5 rounded-[24px] border border-[#DCE1FF] bg-[#F5F6FF] px-4 py-3 text-sm text-[#4F57E8]">
               Opened from a draft source reference. Matching documents are highlighted below.
             </div>
           ) : null}
 
           {libraryError ? (
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-[#FFD2DA] bg-[#FFF1F4] px-4 py-3 text-sm text-[#B4375C]">
               <p>{libraryError}</p>
               <button
                 type="button"
                 onClick={() => void loadDocuments()}
-                className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+                className={dashboardSecondaryButtonClassName}
               >
                 Retry
               </button>
             </div>
           ) : null}
 
-          <div className="overflow-x-auto">
-            <div className="min-w-[760px]">
-              <div className="mb-3 grid grid-cols-[minmax(220px,2fr)_1fr_1fr_120px_120px_150px] gap-3 px-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                <p>Name</p>
-                <p>Category</p>
-                <p>Uploaded</p>
-                <p>Pages</p>
-                <p>Size</p>
-                <p className="text-right">Actions</p>
-              </div>
+          {isLoadingDocuments ? (
+            <div className="rounded-[24px] border border-white/75 bg-white/54 px-6 py-12 text-center text-sm text-slate-500">
+              Loading documents...
+            </div>
+          ) : visibleDocs.length === 0 ? (
+            <div className="rounded-[24px] border border-dashed border-white/75 bg-white/54 px-6 py-12 text-center text-sm text-slate-500">
+              {normalizedDocumentQuery.length > 0
+                ? "No documents match the current search."
+                : "No documents found for the selected filter."}
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {visibleDocs.map((doc) => {
+                const isRequestedDocument =
+                  normalizedRequestedDocumentQuery.length > 0 &&
+                  doc.name.toLowerCase().includes(normalizedRequestedDocumentQuery);
 
-              {isLoadingDocuments ? (
-                <p className="py-8 text-center text-sm text-slate-500">
-                  Loading documents...
-                </p>
-              ) : null}
+                return (
+                  <div
+                    key={doc.id}
+                    data-requested-document={isRequestedDocument ? "true" : undefined}
+                    className={`rounded-[30px] border p-5 shadow-[0_18px_44px_rgba(141,153,179,0.14)] transition ${
+                      isRequestedDocument
+                        ? "border-[#C7CEFF] bg-[#F7F8FF]"
+                        : "border-white/75 bg-white/68"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="grid h-14 w-14 place-items-center rounded-[20px] bg-white/88 text-[#5C61FF] shadow-[0_12px_28px_rgba(141,153,179,0.14)]">
+                        <DashboardIcon name="document" className="h-7 w-7" />
+                      </span>
+                      <span className="rounded-full bg-white/82 px-3 py-1.5 text-xs font-semibold text-slate-500 shadow-[0_12px_24px_rgba(141,153,179,0.12)]">
+                        {getKnowledgeDocumentOriginLabel(doc.origin)}
+                      </span>
+                    </div>
 
-              {!isLoadingDocuments &&
-                visibleDocs.map((doc) => {
-                  const isRequestedDocument =
-                    normalizedRequestedDocumentQuery.length > 0 &&
-                    doc.name.toLowerCase().includes(normalizedRequestedDocumentQuery);
+                    <p className="mt-5 text-2xl font-semibold tracking-tight text-[#1E2340]">
+                      {doc.name}
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-slate-500">
+                      {doc.summary}
+                    </p>
 
-                  return (
-                    <div
-                      key={doc.id}
-                      data-requested-document={
-                        isRequestedDocument ? "true" : undefined
-                      }
-                      className={`grid grid-cols-[minmax(220px,2fr)_1fr_1fr_120px_120px_150px] items-center gap-3 border-b py-3 ${
-                        isRequestedDocument
-                          ? "border-blue-100 bg-blue-50/40"
-                          : "border-slate-100"
-                      }`}
-                    >
-                      <div>
-                        <p className="truncate text-sm font-medium text-slate-800">
-                          {doc.name}
-                        </p>
-                        {doc.mimeType ? (
-                          <p className="mt-1 text-xs font-medium text-slate-500">
-                            {doc.mimeType}
-                          </p>
-                        ) : null}
-                      </div>
+                    <div className="mt-5 flex flex-wrap items-center gap-2">
                       <span
-                        className={`justify-self-start rounded-full px-2.5 py-1 text-xs font-semibold ${knowledgeBaseCategoryClasses[doc.category]}`}
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${knowledgeBaseCategoryClasses[doc.category]}`}
                       >
                         {doc.category}
                       </span>
-                      <p className="text-sm text-slate-600">{doc.uploadedAt}</p>
-                      <p className="text-sm text-slate-600">{doc.pages} pages</p>
-                      <p className="text-sm text-slate-600">
-                        {typeof doc.sizeInBytes === "number"
-                          ? formatKnowledgeFileSize(doc.sizeInBytes)
-                          : "—"}
-                      </p>
-                      <div className="flex justify-end gap-2">
-                        {doc.downloadUrl ? (
-                          <a
-                            href={doc.downloadUrl}
-                            className="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
-                          >
-                            Download
-                          </a>
-                        ) : (
-                          <span className="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-400">
-                            Metadata Only
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(doc.id)}
-                          disabled={deletingId === doc.id}
-                          className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
-                            deletingId === doc.id
-                              ? "cursor-not-allowed bg-slate-200 text-slate-500"
-                              : "bg-red-100 text-red-700 hover:bg-red-200"
-                          }`}
-                        >
-                          {deletingId === doc.id ? "Deleting..." : "Delete"}
-                        </button>
-                      </div>
+                      <span className="rounded-full bg-white/82 px-2.5 py-1 text-xs font-semibold text-slate-500">
+                        {doc.referenceCount} linked cases
+                      </span>
                     </div>
-                  );
-                })}
 
-              {!isLoadingDocuments && visibleDocs.length === 0 ? (
-                <p className="py-8 text-center text-sm text-slate-500">
-                  {normalizedDocumentQuery.length > 0
-                    ? "No documents match the current search."
-                    : "No documents found for the selected filter."}
-                </p>
-              ) : null}
+                    <div className="mt-5 text-sm leading-7 text-slate-500">
+                      <p>{doc.uploadedAt}</p>
+                      <p>
+                        {doc.pages} pages
+                        {typeof doc.sizeInBytes === "number"
+                          ? ` • ${formatKnowledgeFileSize(doc.sizeInBytes)}`
+                          : ""}
+                      </p>
+                      <p>{doc.downloadUrl ? "Download available" : "Metadata only"}</p>
+                    </div>
+
+                    <p className="mt-5 line-clamp-3 text-sm leading-7 text-slate-500">
+                      {doc.previewExcerpt}
+                    </p>
+
+                    <div className="mt-6 flex flex-wrap gap-2">
+                      {doc.downloadUrl ? (
+                        <a
+                          href={doc.downloadUrl}
+                          className={dashboardSecondaryButtonClassName}
+                        >
+                          <span className="mr-2 inline-flex">
+                            <DashboardIcon name="download" className="h-4 w-4" />
+                          </span>
+                          Download
+                        </a>
+                      ) : (
+                        <span className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-400">
+                          Metadata Only
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(doc.id)}
+                        disabled={deletingId === doc.id}
+                        className={
+                          deletingId === doc.id
+                            ? "inline-flex items-center justify-center rounded-full bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-500"
+                            : "inline-flex items-center justify-center rounded-full bg-[#FFE9EE] px-4 py-2.5 text-sm font-semibold text-[#D43D63] transition hover:bg-[#FFD9E2]"
+                        }
+                      >
+                        {deletingId === doc.id ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          )}
         </article>
+
+        <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <article className={`${dashboardPanelClassName} p-5 md:p-6`}>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Total Storage
+            </p>
+            <p className="mt-4 text-4xl font-semibold tracking-tight text-[#1E2340]">
+              {formatKnowledgeFileSize(totalStoredBytes)}
+            </p>
+            <p className="mt-2 text-sm text-slate-500">
+              of {formatKnowledgeFileSize(demoStorageCapacity)} demo capacity
+            </p>
+
+            <div className="mt-5 h-2.5 w-full rounded-full bg-[#E6EAF6]">
+              <div
+                className="h-2.5 rounded-full bg-gradient-to-r from-[#8E96FF] to-[#5C61FF]"
+                style={{
+                  width:
+                    totalStoredBytes === 0
+                      ? "0%"
+                      : `${Math.max(8, storageUsagePercent)}%`,
+                }}
+              />
+            </div>
+          </article>
+
+          <article className={`${dashboardPanelClassName} p-5 md:p-6`}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  AI Training Status
+                </p>
+                <h3 className="mt-3 text-2xl font-semibold tracking-tight text-[#1E2340]">
+                  Library Readiness
+                </h3>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+                  This local knowledge base is {libraryReadiness}% connected to active mailbox cases based on current source references and uploaded documents.
+                </p>
+              </div>
+              <span className="rounded-full border border-white/80 bg-white/82 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#5C61FF] shadow-[0_12px_30px_rgba(141,153,179,0.12)]">
+                {referencedDocumentCount} linked docs
+              </span>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-[22px] border border-white/75 bg-white/62 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  Stored
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-[#1E2340]">
+                  {storedDocumentCount}
+                </p>
+              </div>
+              <div className="rounded-[22px] border border-white/75 bg-white/62 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  Metadata only
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-[#1E2340]">
+                  {metadataOnlyCount}
+                </p>
+              </div>
+              <div className="rounded-[22px] border border-white/75 bg-white/62 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  Referenced
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-[#1E2340]">
+                  {referencedDocumentCount}
+                </p>
+              </div>
+            </div>
+          </article>
+        </div>
       </section>
     </>
+  );
+}
+
+function KnowledgeBasePageFallback() {
+  return (
+    <section className="space-y-4">
+      <article className={`${dashboardPanelClassName} p-6`}>
+        <div className="h-72 rounded-[34px] border border-white/80 bg-white/58" />
+      </article>
+      <article className={`${dashboardPanelClassName} p-6`}>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-72 rounded-[30px] border border-white/75 bg-white/62"
+            />
+          ))}
+        </div>
+      </article>
+    </section>
+  );
+}
+
+export default function KnowledgeBasePage() {
+  return (
+    <Suspense fallback={<KnowledgeBasePageFallback />}>
+      <KnowledgeBasePageContent />
+    </Suspense>
   );
 }

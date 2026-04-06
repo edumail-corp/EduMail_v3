@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { deleteKnowledgeBaseDocument } from "@/lib/server/knowledge-base-store";
+import { deleteKnowledgeLibraryDocument } from "@/lib/server/services/knowledge-base-service";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +8,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const wasDeleted = await deleteKnowledgeBaseDocument(id);
+  const wasDeleted = await deleteKnowledgeLibraryDocument(id);
 
   if (!wasDeleted) {
     return NextResponse.json(

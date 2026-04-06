@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getKnowledgeBaseDocumentFile } from "@/lib/server/knowledge-base-store";
+import { getKnowledgeLibraryDocumentFile } from "@/lib/server/services/knowledge-base-service";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +8,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const fileData = await getKnowledgeBaseDocumentFile(id);
+  const fileData = await getKnowledgeLibraryDocumentFile(id);
 
   if (!fileData) {
     return NextResponse.json(

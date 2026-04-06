@@ -5,9 +5,9 @@ import {
   isKnowledgeBaseCategory,
 } from "@/lib/knowledge-base-data";
 import {
-  createKnowledgeBaseDocument,
-  listKnowledgeBaseDocuments,
-} from "@/lib/server/knowledge-base-store";
+  createKnowledgeLibraryDocument,
+  listKnowledgeLibraryDocuments,
+} from "@/lib/server/services/knowledge-base-service";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,7 @@ function isKnowledgeUploadFile(value: FormDataEntryValue | null): value is File 
 }
 
 export async function GET() {
-  const documents = await listKnowledgeBaseDocuments();
+  const documents = await listKnowledgeLibraryDocuments();
   return NextResponse.json({ documents });
 }
 
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const document = await createKnowledgeBaseDocument({
+  const document = await createKnowledgeLibraryDocument({
     name: file.name.trim(),
     category,
     pages: estimateKnowledgeDocumentPages(file),

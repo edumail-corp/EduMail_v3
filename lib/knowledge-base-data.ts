@@ -5,6 +5,7 @@ export type KnowledgeBaseFilter = "All" | KnowledgeBaseCategory;
 export type KnowledgeCategorySelectValue =
   | "Select category"
   | KnowledgeBaseCategory;
+export type KnowledgeDocumentOrigin = "seeded" | "uploaded";
 
 export type KnowledgeDocument = {
   id: string;
@@ -15,6 +16,10 @@ export type KnowledgeDocument = {
   sizeInBytes?: number;
   mimeType?: string;
   downloadUrl?: string;
+  summary: string;
+  previewExcerpt: string;
+  origin: KnowledgeDocumentOrigin;
+  referenceCount: number;
 };
 
 export type KnowledgeDocumentDraft = {
@@ -64,6 +69,12 @@ const seedKnowledgeDocuments: KnowledgeDocument[] = [
     category: "Admissions",
     uploadedAt: "2026-03-20",
     pages: 34,
+    summary:
+      "Core admissions policy for international applicants, language testing rules, and scholarship review timing.",
+    previewExcerpt:
+      "International applicants must document English-language proficiency unless their prior education was completed in English.",
+    origin: "seeded",
+    referenceCount: 0,
   },
   {
     id: "DOC-2",
@@ -71,6 +82,12 @@ const seedKnowledgeDocuments: KnowledgeDocument[] = [
     category: "Finance",
     uploadedAt: "2026-03-18",
     pages: 21,
+    summary:
+      "Billing handbook covering payment plans, overdue balances, and student-finance escalation paths.",
+    previewExcerpt:
+      "Monthly payment plans can be activated through the billing portal before the published tuition deadline.",
+    origin: "seeded",
+    referenceCount: 0,
   },
   {
     id: "DOC-3",
@@ -78,6 +95,12 @@ const seedKnowledgeDocuments: KnowledgeDocument[] = [
     category: "Registrar",
     uploadedAt: "2026-03-14",
     pages: 12,
+    summary:
+      "Registrar workflow for transcript requests, verification holds, and exception handling for identity mismatches.",
+    previewExcerpt:
+      "Requests with legal-name discrepancies remain on hold until Registrar Operations completes identity verification.",
+    origin: "seeded",
+    referenceCount: 0,
   },
   {
     id: "DOC-4",
@@ -85,6 +108,12 @@ const seedKnowledgeDocuments: KnowledgeDocument[] = [
     category: "Academic",
     uploadedAt: "2026-03-10",
     pages: 27,
+    summary:
+      "Academic records SOP covering grade corrections, faculty approvals, and registrar posting timelines.",
+    previewExcerpt:
+      "Grade corrections require department approval before the Registrar posts the updated record.",
+    origin: "seeded",
+    referenceCount: 0,
   },
   {
     id: "DOC-5",
@@ -92,6 +121,12 @@ const seedKnowledgeDocuments: KnowledgeDocument[] = [
     category: "Registrar",
     uploadedAt: "2026-03-08",
     pages: 9,
+    summary:
+      "Registrar calendar for add/drop deadlines, registration cutoffs, and transcript-impact milestones.",
+    previewExcerpt:
+      "The last day to drop an elective without a W grade is April 4 at 11:59 PM local time.",
+    origin: "seeded",
+    referenceCount: 0,
   },
 ];
 
@@ -116,7 +151,9 @@ export function isKnowledgeCategorySelection(
   return value !== defaultKnowledgeCategorySelection;
 }
 
-export function isKnowledgeBaseCategory(value: string): value is KnowledgeBaseCategory {
+export function isKnowledgeBaseCategory(
+  value: string
+): value is KnowledgeBaseCategory {
   const allowedCategories = new Set<string>(knowledgeBaseCategoryOptions);
   return allowedCategories.has(value);
 }
@@ -163,6 +200,26 @@ export function formatKnowledgeMimeType(mimeType: string) {
   }
 
   return normalizedMimeType.toUpperCase();
+}
+
+export function getKnowledgeDocumentOriginLabel(
+  origin: KnowledgeDocumentOrigin
+) {
+  return origin === "uploaded" ? "Stored File" : "Seeded Metadata";
+}
+
+export function buildKnowledgeDocumentSummary(
+  name: string,
+  category: KnowledgeBaseCategory
+) {
+  return `${category} reference document for ${name.replace(/\.[^.]+$/, "")}.`;
+}
+
+export function buildKnowledgeDocumentPreview(
+  name: string,
+  category: KnowledgeBaseCategory
+) {
+  return `Local ${category.toLowerCase()} guidance is available in ${name} for future retrieval-grounded replies.`;
 }
 
 export function estimateKnowledgeDocumentPages(file: File) {

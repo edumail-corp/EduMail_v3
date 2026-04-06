@@ -2,9 +2,12 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  buildKnowledgeDocumentPreview,
+  buildKnowledgeDocumentSummary,
   getInitialKnowledgeDocuments,
   type KnowledgeDocument,
 } from "@/lib/knowledge-base-data";
+import { appendActivityEvent } from "@/lib/server/activity-log-store";
 
 const knowledgeBaseStorePath = path.join(
   process.cwd(),
@@ -16,8 +19,11 @@ const knowledgeBaseFilesDirectory = path.join(
   "data",
   "knowledge-base-files"
 );
+const seedDocumentMap = new Map(
+  getInitialKnowledgeDocuments().map((document) => [document.id, document])
+);
 
-type StoredKnowledgeDocument = KnowledgeDocument & {
+type StoredKnowledgeDocument = Omit<KnowledgeDocument, "downloadUrl" | "referenceCount"> & {
   storedFileName?: string;
 };
 
@@ -30,6 +36,45 @@ type CreateKnowledgeBaseStoredDocumentInput = {
   fileBuffer: Buffer;
 };
 
+function normalizeStoredDocument(
+  document: Partial<StoredKnowledgeDocument>
+): StoredKnowledgeDocument {
+  const seedDocument = document.id ? seedDocumentMap.get(document.id) : undefined;
+  const baseDocument =
+    seedDocument ??
+    ({
+      id: document.id ?? "DOC-UNKNOWN",
+      name: document.name ?? "Untitled document",
+      category: document.category ?? "Admissions",
+      uploadedAt: document.uploadedAt ?? new Date().toISOString().slice(0, 10),
+      pages: document.pages ?? 1,
+      sizeInBytes: document.sizeInBytes,
+      mimeType: document.mimeType,
+      summary:
+        document.summary ??
+        buildKnowledgeDocumentSummary(
+          document.name ?? "Untitled document",
+          document.category ?? "Admissions"
+        ),
+      previewExcerpt:
+        document.previewExcerpt ??
+        buildKnowledgeDocumentPreview(
+          document.name ?? "Untitled document",
+          document.category ?? "Admissions"
+        ),
+      origin: document.origin ?? "uploaded",
+      referenceCount: 0,
+    } satisfies KnowledgeDocument);
+
+  return {
+    ...baseDocument,
+    ...document,
+    summary: document.summary ?? baseDocument.summary,
+    previewExcerpt: document.previewExcerpt ?? baseDocument.previewExcerpt,
+    origin: document.origin ?? baseDocument.origin,
+  };
+}
+
 function toKnowledgeDocument(document: StoredKnowledgeDocument): KnowledgeDocument {
   return {
     id: document.id,
@@ -39,6 +84,10 @@ function toKnowledgeDocument(document: StoredKnowledgeDocument): KnowledgeDocume
     pages: document.pages,
     sizeInBytes: document.sizeInBytes,
     mimeType: document.mimeType,
+    summary: document.summary,
+    previewExcerpt: document.previewExcerpt,
+    origin: document.origin,
+    referenceCount: 0,
     downloadUrl: document.storedFileName
       ? `/api/knowledge-base/documents/${document.id}/file`
       : undefined,
@@ -87,8 +136,8 @@ export async function listKnowledgeBaseDocuments() {
   await ensureKnowledgeBaseStore();
 
   const fileContents = await readFile(knowledgeBaseStorePath, "utf8");
-  const documents = JSON.parse(fileContents) as StoredKnowledgeDocument[];
-  return documents.map(toKnowledgeDocument);
+  const documents = JSON.parse(fileContents) as Partial<StoredKnowledgeDocument>[];
+  return documents.map((document) => toKnowledgeDocument(normalizeStoredDocument(document)));
 }
 
 export async function createKnowledgeBaseDocument(
@@ -114,10 +163,22 @@ export async function createKnowledgeBaseDocument(
     pages: input.pages,
     sizeInBytes: input.sizeInBytes,
     mimeType: input.mimeType,
+    summary: buildKnowledgeDocumentSummary(input.name, input.category),
+    previewExcerpt: buildKnowledgeDocumentPreview(input.name, input.category),
+    origin: "uploaded",
     storedFileName,
   };
 
-  await writeKnowledgeBaseDocuments([nextDocument, ...documents]);
+  await writeKnowledgeBaseDocuments([nextDocument, ...documents.map(normalizeStoredDocument)]);
+
+  await appendActivityEvent({
+    action: "document_uploaded",
+    entityType: "document",
+    entityId: nextDocument.id,
+    title: nextDocument.name,
+    description: `Added a ${nextDocument.category} document to the library.`,
+    href: `/dashboard/knowledge-base?document=${encodeURIComponent(nextDocument.name)}`,
+  });
 
   return toKnowledgeDocument(nextDocument);
 }
@@ -126,7 +187,9 @@ export async function deleteKnowledgeBaseDocument(id: string) {
   await ensureKnowledgeBaseStore();
 
   const fileContents = await readFile(knowledgeBaseStorePath, "utf8");
-  const documents = JSON.parse(fileContents) as StoredKnowledgeDocument[];
+  const documents = (JSON.parse(fileContents) as Partial<StoredKnowledgeDocument>[]).map(
+    normalizeStoredDocument
+  );
   const documentToDelete = documents.find((document) => document.id === id);
   const nextDocuments = documents.filter((document) => document.id !== id);
 
@@ -145,6 +208,18 @@ export async function deleteKnowledgeBaseDocument(id: string) {
   }
 
   await writeKnowledgeBaseDocuments(nextDocuments);
+
+  if (documentToDelete) {
+    await appendActivityEvent({
+      action: "document_deleted",
+      entityType: "document",
+      entityId: documentToDelete.id,
+      title: documentToDelete.name,
+      description: `Removed a ${documentToDelete.category} document from the library.`,
+      href: "/dashboard/knowledge-base",
+    });
+  }
+
   return true;
 }
 
@@ -152,7 +227,9 @@ export async function getKnowledgeBaseDocumentFile(id: string) {
   await ensureKnowledgeBaseStore();
 
   const fileContents = await readFile(knowledgeBaseStorePath, "utf8");
-  const documents = JSON.parse(fileContents) as StoredKnowledgeDocument[];
+  const documents = (JSON.parse(fileContents) as Partial<StoredKnowledgeDocument>[]).map(
+    normalizeStoredDocument
+  );
   const document = documents.find((candidate) => candidate.id === id);
 
   if (!document?.storedFileName) {

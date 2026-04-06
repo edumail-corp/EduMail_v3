@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
-import { isEmailStatus, type StaffEmailUpdateInput } from "@/lib/email-data";
-import { updateStaffEmail } from "@/lib/server/email-store";
+import {
+  isEmailStatus,
+  isStaffAssignee,
+  type StaffEmailUpdateInput,
+} from "@/lib/email-data";
+import { updateMailboxEmail } from "@/lib/server/services/mailbox-service";
 
 export const dynamic = "force-dynamic";
 
@@ -11,18 +15,38 @@ function isEmailUpdatePayload(value: unknown): value is StaffEmailUpdateInput {
 
   const candidate = value as Partial<StaffEmailUpdateInput>;
   const hasStatus = typeof candidate.status === "string";
+  const hasAssignee =
+    typeof candidate.assignee === "string" || candidate.assignee === null;
   const hasDraft = typeof candidate.aiDraft === "string";
+  const hasNote =
+    typeof candidate.staffNote === "string" || candidate.staffNote === null;
 
-  if (!hasStatus && !hasDraft) {
+  if (!hasStatus && !hasAssignee && !hasDraft && !hasNote) {
     return false;
   }
 
-  if (hasStatus && !isEmailStatus(candidate.status)) {
-    return false;
+  if (hasStatus) {
+    const status = candidate.status;
+
+    if (typeof status !== "string" || !isEmailStatus(status)) {
+      return false;
+    }
   }
 
-  if (hasDraft && candidate.aiDraft.trim().length === 0) {
-    return false;
+  if (hasAssignee) {
+    const assignee = candidate.assignee;
+
+    if (typeof assignee === "string" && !isStaffAssignee(assignee)) {
+      return false;
+    }
+  }
+
+  if (hasDraft) {
+    const aiDraft = candidate.aiDraft;
+
+    if (typeof aiDraft !== "string" || aiDraft.trim().length === 0) {
+      return false;
+    }
   }
 
   return true;
@@ -42,9 +66,20 @@ export async function PATCH(
   }
 
   const { id } = await context.params;
-  const email = await updateStaffEmail(id, {
-    ...(payload.status ? { status: payload.status } : {}),
-    ...(payload.aiDraft ? { aiDraft: payload.aiDraft.trim() } : {}),
+  const email = await updateMailboxEmail(id, {
+    ...(typeof payload.status === "string" ? { status: payload.status } : {}),
+    ...("assignee" in payload ? { assignee: payload.assignee ?? null } : {}),
+    ...(typeof payload.aiDraft === "string"
+      ? { aiDraft: payload.aiDraft.trim() }
+      : {}),
+    ...("staffNote" in payload
+      ? {
+          staffNote:
+            typeof payload.staffNote === "string"
+              ? payload.staffNote.trim() || null
+              : null,
+        }
+      : {}),
   });
 
   if (!email) {

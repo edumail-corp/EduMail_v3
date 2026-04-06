@@ -5,17 +5,26 @@ EduMailAI is a Next.js prototype for a university staff workflow tool. The app h
 ## What’s in the prototype
 
 - Staff dashboard shell with shared navigation and layout
+- Manual compose flow for creating new local cases
 - Inbox, Draft Queue, and Escalations review flows
-- AI draft detail view with confidence indicators
-- Knowledge Base document library with local client-side file staging for PDF and DOCX uploads
+- AI draft detail view with confidence indicators, ownership routing, and staff notes
+- Activity log for approvals, assignments, draft saves, note updates, and document changes
+- Downloadable JSON export of the local activity trail
+- Knowledge Base document library with locally persisted PDF and DOCX uploads plus download support
+- Settings surface for integration readiness, future data model, and manual setup tracking
 
 ## App Routes
 
 - `/` - product landing page
+- `/dashboard` - workspace overview
+- `/dashboard/activity` - workflow activity timeline
+- `/dashboard/compose` - create a new local mailbox case
 - `/dashboard/inbox` - full message queue
 - `/dashboard/drafts` - draft-review queue
 - `/dashboard/escalations` - escalation queue
 - `/dashboard/knowledge-base` - knowledge document management
+- `/dashboard/settings` - local readiness, provider status, and setup checklist
+- `/api/activity/export` - download the persisted local activity log as JSON
 
 ## Local Development
 
@@ -28,13 +37,21 @@ npm run dev
 
 Open `http://localhost:3000` with your browser to see the app.
 
+If Turbopack behaves oddly in your environment, you can use the webpack fallback:
+
+```bash
+npm run dev:webpack
+```
+
 ## Verification
 
 Use these commands to verify the project locally:
 
 ```bash
+npm run typecheck
 npm run lint
 npm run build
+npm run verify
 ```
 
 Note: the production build uses `next/font` with Geist, so it may need network access the first time the build fetches the font files.
@@ -48,6 +65,6 @@ Note: the production build uses `next/font` with Geist, so it may need network a
 
 ## Current Notes
 
-- The message and document data are still in a shared local prototype data layer.
-- The Knowledge Base upload flow is intentionally local and in-memory, so uploads do not persist across page reloads.
-- The next logical step is wiring the shared data layer to real backend storage or APIs.
+- The message, activity, and document data persist locally using JSON files plus uploaded files in the project workspace.
+- This is still a local prototype, so there is no real authentication, database, or external email integration yet.
+- The next logical step is replacing local file storage with a real backend and user/account model.

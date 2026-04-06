@@ -1,28 +1,57 @@
-import type { EmailCategory, EmailStatus } from "@/lib/email-data";
+import type {
+  EmailCategory,
+  EmailPriority,
+  EmailStatus,
+} from "@/lib/email-data";
 
 export const dashboardNavItems = [
-  { label: "Overview", shortLabel: "Home", href: "/dashboard" },
-  { label: "Inbox", shortLabel: "All", href: "/dashboard/inbox" },
-  { label: "Draft Queue", shortLabel: "Review", href: "/dashboard/drafts" },
-  { label: "Escalations", shortLabel: "Urgent", href: "/dashboard/escalations" },
+  { label: "Dashboard", shortLabel: "Home", href: "/dashboard", icon: "overview" },
+  { label: "Inbox", shortLabel: "All", href: "/dashboard/inbox", icon: "inbox" },
+  { label: "Draft Queue", shortLabel: "Review", href: "/dashboard/drafts", icon: "drafts" },
+  { label: "Escalations", shortLabel: "Urgent", href: "/dashboard/escalations", icon: "escalations" },
   {
     label: "Knowledge Base",
     shortLabel: "Docs",
     href: "/dashboard/knowledge-base",
+    icon: "knowledge",
+  },
+  {
+    label: "Activity Log",
+    shortLabel: "Log",
+    href: "/dashboard/activity",
+    icon: "activity",
+  },
+  {
+    label: "Settings",
+    shortLabel: "Config",
+    href: "/dashboard/settings",
+    icon: "settings",
   },
 ] as const;
 
+export const dashboardCurrentUser = {
+  name: "Admin User",
+  role: "Prototype Owner",
+  email: "admin@edumailai.local",
+} as const;
+
 export const emailStatusClasses: Record<EmailStatus, string> = {
-  Draft: "border-amber-200 bg-amber-100 text-amber-800",
-  "Auto-sent": "border-emerald-200 bg-emerald-100 text-emerald-800",
-  Escalated: "border-rose-200 bg-rose-100 text-rose-800",
+  Draft: "border-transparent bg-[#EEF0FF] text-[#555CF0]",
+  "Auto-sent": "border-transparent bg-[#E9FBF1] text-[#0C8A53]",
+  Escalated: "border-transparent bg-[#FFE9EE] text-[#D43D63]",
 };
 
 export const emailCategoryClasses: Record<EmailCategory, string> = {
-  Admissions: "bg-blue-100 text-blue-700",
-  Finance: "bg-indigo-100 text-indigo-700",
-  Registrar: "bg-sky-100 text-sky-700",
-  Academic: "bg-cyan-100 text-cyan-700",
+  Admissions: "bg-[#EDF2FF] text-[#5266E8]",
+  Finance: "bg-[#EEF6FF] text-[#3974E8]",
+  Registrar: "bg-[#ECFAFF] text-[#0F8BA8]",
+  Academic: "bg-[#F1F8FF] text-[#2F79B7]",
+};
+
+export const emailPriorityClasses: Record<EmailPriority, string> = {
+  Low: "border-transparent bg-slate-100 text-slate-600",
+  Medium: "border-transparent bg-[#FFF4DF] text-[#B97411]",
+  High: "border-transparent bg-[#FFE9EE] text-[#D43D63]",
 };
 
 export function formatEmailDate(iso: string) {
@@ -31,5 +60,13 @@ export function formatEmailDate(iso: string) {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+  });
+}
+
+export function formatEmailDay(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
   });
 }
